@@ -167,8 +167,8 @@ def rescale_data(scale_map, df, columns=['predictions', 'y_sequence']):
         mean = scale_map['Sales'][store_id]['mean']
         std = scale_map['Sales'][store_id]['std']
         for col in columns:
-            store_data[col] = store_data[col].apply(lambda x: (np.array(x) * std) + mean)
-            store_data = store_data[col].apply(lambda x: np.exp(x) - 1)
+            store_data[col] = store_data.apply(lambda x: (np.array(x[col]) * std) + mean, axis=1)
+            store_data[col] = store_data.apply(lambda x: np.exp(x[col]) - 1, axis=1)
         rescaled_data = pd.concat([rescaled_data, store_data], ignore_index=True)
     return rescaled_data
 
