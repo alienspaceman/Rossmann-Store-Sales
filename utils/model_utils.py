@@ -16,7 +16,7 @@ np.random.seed(0)
 
 
 class RNNEncoder(nn.Module):
-    def __init__(self, rnn_num_layers=1, input_feature_len=1, sequence_len=168, hidden_size=100, bidirectional=False, device='cpu', rnn_dropout=0.2):
+    def __init__(self, rnn_num_layers=1, input_feature_len=1, sequence_len=120, hidden_size=100, bidirectional=False, device='cpu', rnn_dropout=0.2):
         super().__init__()
         self.sequence_len = sequence_len
         self.hidden_size = hidden_size
