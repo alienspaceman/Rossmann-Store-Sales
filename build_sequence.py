@@ -39,6 +39,7 @@ def split_sequences(group_data, n_steps_in, n_steps_out, x_cols, y_col, addition
         X.append(seq_x)
         y.append(seq_y)
     additional_column_items = sorted(additional_col_map.items(), key=lambda x: x[0])
+    #  (n_sequences, n_input_steps, n_features), (n_sequences, n_output_steps, n_features), n_features*(n_steps, 1)
     return (np.array(X), np.array(y), *[i[1] for i in additional_column_items])
 
 
@@ -64,6 +65,11 @@ def mp_apply(df, func, key_column):
     key_splits = almost_equal_split(df[key_column].unique(), workers)
     split_dfs = [df[df[key_column].isin(key_list)] for key_list in key_splits]
     result = process_map(_apply_df, [(d, func, key_column) for d in split_dfs], max_workers=workers)
+    # logging.info(f"Number of stores: {len(result)}")
+    # logging.info(f"Shape of 1 df {result[0].shape}")
+    # logging.info(f"First df {result[0]}")
+    # logging.info(pd.concat(result).shape)
+    # list of df per store. df consists of 1 cell
     return pd.concat(result)
 
 
@@ -86,13 +92,23 @@ def sequence_builder(data, n_steps_in, n_steps_out, key_column, x_cols, y_col, a
         key_column
     )
 
-    logging.info('Prepare dataframe')
-    sequence_data = pd.DataFrame(sequence_data, columns=['result'])
-    s = sequence_data.apply(lambda x: pd.Series(zip(*[col for col in x['result']])), axis=1).stack().reset_index(level=1, drop=True)
+    # logging.info('Prepare dataframe')
+    sequence_data = pd.DataFrame(sequence_data, columns=['result'])  # (n stores, 1) concatenated list of dfs of 1 cell
+    # logging.info(f'Shape of seq data {sequence_data.shape}')
+    # col is 1 element of tuple return split_sequences
+    # zip cols by step. make series from each step and stack them.
+    #level_1	0
+    # 0	0	(1, 2, 3)
+    # 0	1	(5, 5, 4)
+    # 0	2	(3, 3, 5)
+    # 1	0	(1, 6, 8)
+
+    s = sequence_data.apply(lambda x: pd.Series(zip(*[col for col in x['result']])), axis=1).stack().reset_index(level=1, drop=True) # unpack each col in each store df
     s.name = 'result'
+    # logging.info(s)
     sequence_data = sequence_data.drop('result', axis=1).join(s)
     sequence_data['result'] = pd.Series(sequence_data['result'])
-    sequence_data[['x_sequence', 'y_sequence'] + sorted(set([key_column] + additional_columns))] = pd.DataFrame(sequence_data.result.values.tolist(), index=sequence_data.index)
+    sequence_data[['x_sequence', 'y_sequence'] + sorted(set([key_column] + additional_columns))] = pd.DataFrame(sequence_data.result.values.tolist(), index=sequence_data.index) # [(store, [])]
     sequence_data.drop('result', axis=1, inplace=True)
     if key_column in sequence_data.columns:
         sequence_data.drop(key_column, axis=1, inplace=True)
@@ -110,14 +126,19 @@ if __name__ == '__main__':
     output_data_filename = sys.argv[2]
     n_steps_in = int(sys.argv[3])
     logging.info(input_data_filename)
-    x_cols = ['Sales', 'Customers', 'Open', 'Promo', 'StateHoliday',
+    x_cols = ['Sales',
+              'Customers', 'Open', 'Promo', 'StateHoliday',
               'SchoolHoliday', 'DayOfWeek_sin', 'DayOfWeek_cos', 'Month_sin',
-              'Month_cos', 'Day_sin', 'Day_cos']
-    additional_columns = ['Date', 'StoreType', 'Assortment',
+              'Month_cos', 'Day_sin', 'Day_cos'
+              ]
+    additional_columns = ['Date',
+                          'StoreType', 'Assortment',
                           'CompetitionDistance', 'Promo2', 'PromoInterval',
                           'CompetitionOpenSinceMonth_sin', 'CompetitionOpenSinceMonth_cos',
-                          'Promo2SinceWeek_sin', 'Promo2SinceWeek_cos', 'Sales_mean',
-                          'Customers_mean', 'Assortment_mean', 'CompetitionDistance_mean']
+                          'Promo2SinceWeek_sin', 'Promo2SinceWeek_cos',
+                          # 'Sales_mean',
+                          # 'Customers_mean', 'Assortment_mean', 'CompetitionDistance_mean'
+                          ]
     logging.info(f'Time-dependant features: {x_cols}')
     logging.info(f'Time-independent features: {additional_columns}')
     logging.info(f'Target Feature: Sales')

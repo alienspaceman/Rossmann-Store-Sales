@@ -148,10 +148,30 @@ def transform_sales_df(df, le_file):
     return df, le
 
 
+def inverselogtransform_sales_df(df):
+    df['Sales'] = np.exp(df['Sales']) - 1
+    # df['Customers'] = np.exp(df['Customers']) - 1
+    return df
+
+
 def logtransform_sales_df(df):
     df['Sales'] = np.log1p(df['Sales'])
     df['Customers'] = np.log1p(df['Customers'])
     return df
+
+
+def rescale_data(scale_map, df, columns=['predictions', 'y_sequence']):
+    rescaled_data = pd.DataFrame()
+    logging.info(f'Start rescaling')
+    for store_id, store_data in tqdm(df.groupby('Store', as_index=False)):
+        mean = scale_map['Sales'][store_id]['mean']
+        std = scale_map['Sales'][store_id]['std']
+        for col in columns:
+            store_data[col] = store_data[col].apply(lambda x: (np.array(x) * std) + mean)
+            store_data = store_data[col].apply(lambda x: np.exp(x) - 1)
+        rescaled_data = pd.concat([rescaled_data, store_data], ignore_index=True)
+    return rescaled_data
+
 
 
 def scale_data(df, scalemap_file_name, scaled_data_filename, cols_to_scale, mode='val', val_date=None):
@@ -205,9 +225,9 @@ class StoreDataset(Dataset):
     """
     Characterizes a Dataset for PyTorch
     """
-    def __init__(self, cat_columns=[], num_columns=[], embed_vector_size=None, decoder_input=True,
-                 cat_columns_to_decoder=True,
-                 ohe_cat_columns=True):
+    def __init__(self, cat_columns=[], num_columns=[], embed_vector_size=None, decoder_input=False,
+                 cat_columns_to_decoder=False,
+                 ohe_cat_columns=False):
         super().__init__()
         logging.info('Create Dataset object')
         self.sequence_data = None
@@ -247,10 +267,12 @@ class StoreDataset(Dataset):
         """
         row = self.sequence_data.iloc[[idx]]  # <class 'pandas.core.frame.DataFrame'>
         x_inputs = [torch.tensor(row['x_sequence'].values[0], dtype=torch.float32)]
-        y = torch.tensor(row['y_sequence'].values[0], dtype=torch.float32)
+        y = torch.tensor(row['y_sequence'].values[0][:, 0], dtype=torch.float32)
+        decoder_input = torch.empty(row['y_sequence'].values[0].shape[0], dtype=torch.float32)
         if self.pass_decoder_input:
             # pass lag features to decoder
-            decoder_input = torch.tensor(row['y_sequence'].values[0][:, 1:], dtype=torch.float32)
+            lag_input = torch.tensor(row['y_sequence'].values[0][:, 1:], dtype=torch.float32)
+            decoder_input = torch.cat((decoder_input, lag_input))
 
         if len(self.num_columns) > 0:
             for col in self.num_columns:
@@ -259,7 +281,8 @@ class StoreDataset(Dataset):
                 # decoder_input consists of lag features + additional numerical columns
                 num_tensor = torch.tensor([row[col].values[0]], dtype=torch.float32)
                 x_inputs[0] = torch.cat((x_inputs[0], num_tensor.repeat(x_inputs[0].size(0)).unsqueeze(1)), axis=1)
-                decoder_input = torch.cat((decoder_input, num_tensor.repeat(decoder_input.size(0)).unsqueeze(1)), axis=1)
+                if self.pass_decoder_input:
+                    decoder_input = torch.cat((decoder_input, num_tensor.repeat(decoder_input.size(0)).unsqueeze(1)), axis=1)
 
         if len(self.cat_columns) > 0:
             if self.ohe_cat_columns:
@@ -279,7 +302,6 @@ class StoreDataset(Dataset):
                 x_inputs.append(cat_tensor)
         if self.pass_decoder_input:
             x_inputs.append(decoder_input)
-            y = torch.tensor(row['y_sequence'].values[0][:, 0], dtype=torch.float32)
         if len(x_inputs) > 1:
             return tuple(x_inputs), y
         return x_inputs[0], y
