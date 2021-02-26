@@ -5,7 +5,7 @@ Main points:
 * Encoder-Decoder RNN model
 * Multivariate 120 length input sequence, 47 length 1-D output sequence
 
-To make a solution, you can run either Local_version.ipynb or FullPipelineColab.ipynb with an additional requirements installation.
+To make a solution, you can run either Local_version.ipynb (with explanations) or FullPipelineColab.ipynb with an additional requirements installation.
 
 To run a local solution:
 python 3.7.8 for pickle files
