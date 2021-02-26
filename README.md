@@ -1,4 +1,4 @@
-#Takehome task
+# Takehome task
 
 Project contains a solution of a multisite multivariate multistep time forecasting task.\
 Main points:
@@ -14,7 +14,7 @@ python 3.7.8 for pickle files
 
 
 To run a Google Colab notebook:
-* Upload FullPipelineColab.ipynb to a Google Colab 
+* Upload FullPipelineColab.ipynb to Google Colab 
 1. Create a folder for a project on Google Drive
 2. Go to this folder and choose Open with Google Colab by clicking on a right button
 3. Mount to your Google Drive disk
@@ -24,7 +24,9 @@ To run a Google Colab notebook:
 
 Files with a pretrained model and modified data from colab notebook could be placed in the root of a repo directory.
 They are not needed for the coldstart.
+
 They can be downloaded by the following links: 
+
 largefiles/:
 https://drive.google.com/drive/folders/17-0oupaG31DIZwbroBDe2nn53Xgxbrmb?usp=sharing
 
