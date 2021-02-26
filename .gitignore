@@ -1,9 +1,6 @@
 /venv
 /largefiles
-.ipynb_checkpoints/
-.idea/
 __pycache__/
 .DS_Store
-/.ipynb_checkpoints
-/.idea
-/__pycache__
+.ipynb_checkpoints
+.idea
