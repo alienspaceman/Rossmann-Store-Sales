@@ -8,6 +8,7 @@ Main points:
 To make a solution, you can run either Local_version.ipynb or FullPipelineColab.ipynb with an additional requirements installation.
 
 To run a local solution:
+python 3.7.8 for pickle files
 1. `pip install -r requirements.txt`
 2. run Local_version.ipynb
 
@@ -21,9 +22,14 @@ To run a Google Colab notebook:
 5. Move to a folder with this repo. Create a folder largefiles in the root of a repo.
 6. Move uploaded FullPipelineColab.ipynb to the folder with this repo and run it
 
-Files with a model and data from colab notebook can be downloaded by the following links: 
+Files with a pretrained model and modified data from colab notebook could be placed in the root of a repo directory.
+They are not needed for the coldstart.
+They can be downloaded by the following links: 
 largefiles/:
 https://drive.google.com/drive/folders/17-0oupaG31DIZwbroBDe2nn53Xgxbrmb?usp=sharing
 
 models/:
 https://drive.google.com/drive/folders/11Md6b9jrnWj4vOAXZa94FJ551RI0dSZd?usp=sharing
+
+runs/:
+https://drive.google.com/drive/folders/11GRgz7S3cRBlrww6uBcPqg3JpX1Euf0W?usp=sharing
