@@ -1,4 +1,4 @@
-# Takehome task
+# Rossmann Store Sales
 
 Project contains a solution of a multisite multivariate multistep time forecasting task.\
 Main points:
